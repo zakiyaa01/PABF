@@ -36,22 +36,28 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f1f5f9',
-      padding: '1rem'
-    }}>
-      <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem' }}>
+    <div className="login-split">
+      {/* Left Visual Area */}
+      <div className="login-visual">
+        <Shield size={80} color="#fff" style={{ marginBottom: '1.5rem' }} />
+        <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
+          Sistem Absensi Terpadu
+        </h1>
+        <p style={{ fontSize: '1rem', color: '#e2e8f0', textAlign: 'center', maxWidth: '400px' }}>
+          Kelola kehadiran, pengajuan izin, dan pemantauan asrama Universitas Andalas dengan mudah, cepat, dan transparan.
+        </p>
+      </div>
+
+      {/* Right Form Area */}
+      <div className="login-form-container">
+        <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
             width: '60px',
             height: '60px',
             backgroundColor: 'var(--primary)',
             borderRadius: '50%',
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1rem'
@@ -59,10 +65,10 @@ const LoginPage = () => {
             <Shield size={32} color="#fff" />
           </div>
           <h1 style={{ fontSize: '1.4rem', color: '#0f172a', fontWeight: 700 }}>
-            Absensi Asrama UNAND
+            Masuk ke Akun Anda
           </h1>
           <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-            Sistem Informasi Absensi Penghuni Asrama Universitas Andalas
+            Masukkan identitas penghuni atau pengelola
           </p>
         </div>
 
@@ -164,6 +170,7 @@ const LoginPage = () => {
               Admin
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>

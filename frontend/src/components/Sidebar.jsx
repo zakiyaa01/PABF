@@ -1,12 +1,21 @@
 import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LayoutDashboard, CheckSquare, FileText, Users, Building, Shield } from 'lucide-react';
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ isOpen, setIsOpen }) => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeTab = location.pathname.split('/')[1] || 'dashboard';
+
+  const handleNav = (path) => {
+    navigate(path);
+    if (setIsOpen) setIsOpen(false);
+  };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-brand">
         <Shield size={24} color="var(--accent)" />
         <span>ASRAMA UNAND</span>
@@ -15,7 +24,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       <ul className="sidebar-menu">
         <li 
           className={`sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dashboard')}
+          onClick={() => handleNav('/dashboard')}
         >
           <LayoutDashboard size={18} />
           <span>Dashboard</span>
@@ -25,14 +34,14 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           <>
             <li 
               className={`sidebar-item ${activeTab === 'presensi' ? 'active' : ''}`}
-              onClick={() => setActiveTab('presensi')}
+              onClick={() => handleNav('/presensi')}
             >
               <CheckSquare size={18} />
               <span>Presensi Harian</span>
             </li>
             <li 
               className={`sidebar-item ${activeTab === 'izin' ? 'active' : ''}`}
-              onClick={() => setActiveTab('izin')}
+              onClick={() => handleNav('/izin')}
             >
               <FileText size={18} />
               <span>Pengajuan Izin</span>
@@ -44,14 +53,14 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           <>
             <li 
               className={`sidebar-item ${activeTab === 'verifikasi' ? 'active' : ''}`}
-              onClick={() => setActiveTab('verifikasi')}
+              onClick={() => handleNav('/verifikasi')}
             >
               <FileText size={18} />
               <span>Verifikasi Izin</span>
             </li>
             <li 
               className={`sidebar-item ${activeTab === 'rekap' ? 'active' : ''}`}
-              onClick={() => setActiveTab('rekap')}
+              onClick={() => handleNav('/rekap')}
             >
               <CheckSquare size={18} />
               <span>Rekap Presensi</span>
@@ -63,14 +72,14 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           <>
             <li 
               className={`sidebar-item ${activeTab === 'users' ? 'active' : ''}`}
-              onClick={() => setActiveTab('users')}
+              onClick={() => handleNav('/users')}
             >
               <Users size={18} />
               <span>Manajemen User</span>
             </li>
             <li 
               className={`sidebar-item ${activeTab === 'gedung' ? 'active' : ''}`}
-              onClick={() => setActiveTab('gedung')}
+              onClick={() => handleNav('/gedung')}
             >
               <Building size={18} />
               <span>Gedung & Kamar</span>

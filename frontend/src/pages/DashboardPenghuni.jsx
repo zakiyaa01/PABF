@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { presensiService, izinService } from '../services/api';
 import { Sun, Moon, Calendar, Clock, CheckCircle2, FilePlus, AlertCircle } from 'lucide-react';
 
-const DashboardPenghuni = ({ activeTab = 'dashboard', setActiveTab }) => {
+const DashboardPenghuni = ({ activeTab = 'dashboard' }) => {
   const { user } = useAuth();
   const [presensiList, setPresensiList] = useState([]);
   const [izinList, setIzinList] = useState([]);
@@ -85,18 +85,26 @@ const DashboardPenghuni = ({ activeTab = 'dashboard', setActiveTab }) => {
   // Malam: 18:00 (1080m) - 20:30 (1230m)
   const isMalamTime = timeInMinutes >= 1080 && timeInMinutes <= 1230;
 
+  const formatCountdown = (endMinute) => {
+    const diff = endMinute - timeInMinutes;
+    if (diff <= 0) return '0j 0m';
+    const h = Math.floor(diff / 60);
+    const m = diff % 60;
+    return `${h}j ${m}m tersisa`;
+  };
+
   return (
     <div>
       {/* Welcome Banner */}
       {activeTab === 'dashboard' && (
-        <div className="card" style={{ marginBottom: '1.5rem', backgroundColor: 'var(--primary)', color: '#fff' }}>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>Selamat Datang, {user?.nama}! 👋</h2>
-        <p style={{ fontSize: '0.85rem', color: '#93c5fd', marginTop: '0.25rem' }}>
+        <div className="card" style={{ marginBottom: '1.5rem', background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)', color: '#fff', border: 'none', boxShadow: '0 10px 15px -3px rgba(30, 81, 40, 0.3)' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.025em' }}>Selamat Datang, {user?.nama}! 👋</h2>
+        <p style={{ fontSize: '0.9rem', color: '#d1fae5', marginTop: '0.4rem', opacity: 0.9 }}>
           Penghuni {user?.namaGedung || 'Asrama UNAND'} - Kamar {user?.noKamar || '-'}
         </p>
-        <div style={{ marginTop: '1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span><Calendar size={14} style={{ verticalAlign: 'middle' }} /> {time.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          <span><Clock size={14} style={{ verticalAlign: 'middle' }} /> {time.toLocaleTimeString('id-ID')} WIB</span>
+        <div style={{ marginTop: '1.25rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '1.25rem', backgroundColor: 'rgba(255,255,255,0.15)', padding: '0.6rem 1rem', borderRadius: '8px', display: 'inline-flex' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Calendar size={16} /> {time.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Clock size={16} /> {time.toLocaleTimeString('id-ID')} WIB</span>
         </div>
         </div>
       )}
@@ -119,44 +127,52 @@ const DashboardPenghuni = ({ activeTab = 'dashboard', setActiveTab }) => {
         <>
           <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
         {/* Card Subuh */}
-        <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
+        <div className="card" style={{ borderLeft: isSubuhTime ? '4px solid var(--success)' : '4px solid #cbd5e1', position: 'relative', overflow: 'hidden' }}>
+          {isSubuhTime && <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'var(--success)', color: 'white', fontSize: '0.7rem', padding: '0.25rem 0.75rem', borderBottomLeftRadius: '10px', fontWeight: 'bold' }}>Sedang Berlangsung</div>}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Sun size={24} color="#f59e0b" />
+              <Sun size={24} color={isSubuhTime ? 'var(--success)' : '#94a3b8'} />
               <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Presensi Subuh</h3>
             </div>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Jadwal: 04:00 - 06:00 WIB</span>
+            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, backgroundColor: '#f1f5f9', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>04:00 - 06:00 WIB</span>
           </div>
-          <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.25rem' }}>
-            {isSubuhTime ? '🟢 Sesi Presensi Subuh Sedang Berlangsung' : '🟡 Di luar jadwal sesi Subuh'}
+          <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.25rem', minHeight: '40px' }}>
+            {isSubuhTime ? 
+              <span style={{ color: 'var(--success)', fontWeight: 600 }}>🟢 Sesi Aktif • {formatCountdown(360)}</span> : 
+              '🟡 Di luar jadwal sesi Subuh'}
           </p>
           <button
             onClick={() => handlePresensi('Subuh')}
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center' }}
+            className={`btn ${isSubuhTime ? 'btn-primary btn-pulse' : 'btn'}`}
+            style={{ width: '100%', backgroundColor: isSubuhTime ? '' : '#e2e8f0', color: isSubuhTime ? '' : '#64748b', cursor: isSubuhTime ? 'pointer' : 'not-allowed' }}
+            disabled={!isSubuhTime}
           >
-            <CheckCircle2 size={16} /> Presensi Subuh Sekarang
+            <CheckCircle2 size={16} /> Presensi Subuh
           </button>
         </div>
 
         {/* Card Malam */}
-        <div className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
+        <div className="card" style={{ borderLeft: isMalamTime ? '4px solid var(--primary)' : '4px solid #cbd5e1', position: 'relative', overflow: 'hidden' }}>
+          {isMalamTime && <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'var(--primary)', color: 'white', fontSize: '0.7rem', padding: '0.25rem 0.75rem', borderBottomLeftRadius: '10px', fontWeight: 'bold' }}>Sedang Berlangsung</div>}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Moon size={24} color="var(--primary)" />
+              <Moon size={24} color={isMalamTime ? 'var(--primary)' : '#94a3b8'} />
               <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Presensi Malam</h3>
             </div>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Jadwal: 18:00 - 20:30 WIB</span>
+            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, backgroundColor: '#f1f5f9', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>18:00 - 20:30 WIB</span>
           </div>
-          <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.25rem' }}>
-            {isMalamTime ? '🟢 Sesi Presensi Malam Sedang Berlangsung' : '🟡 Di luar jadwal sesi Malam'}
+          <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.25rem', minHeight: '40px' }}>
+            {isMalamTime ? 
+              <span style={{ color: 'var(--primary)', fontWeight: 600 }}>🟢 Sesi Aktif • {formatCountdown(1230)}</span> : 
+              '🟡 Di luar jadwal sesi Malam'}
           </p>
           <button
             onClick={() => handlePresensi('Malam')}
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center' }}
+            className={`btn ${isMalamTime ? 'btn-primary btn-pulse' : 'btn'}`}
+            style={{ width: '100%', backgroundColor: isMalamTime ? '' : '#e2e8f0', color: isMalamTime ? '' : '#64748b', cursor: isMalamTime ? 'pointer' : 'not-allowed' }}
+            disabled={!isMalamTime}
           >
-            <CheckCircle2 size={16} /> Presensi Malam Sekarang
+            <CheckCircle2 size={16} /> Presensi Malam
           </button>
         </div>
       </div>

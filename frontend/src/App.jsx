@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import Navbar from './components/Navbar';
@@ -7,44 +8,73 @@ import DashboardPenghuni from './pages/DashboardPenghuni';
 import DashboardFasil from './pages/DashboardFasil';
 import DashboardAdmin from './pages/DashboardAdmin';
 
-const MainApp = () => {
+const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
 
-  if (!user) {
-    return <LoginPage />;
-  }
-
-  const renderRoleDashboard = () => {
-    switch (user.role) {
-      case 'Penghuni':
-        return <DashboardPenghuni activeTab={activeTab} setActiveTab={setActiveTab} />;
-      case 'Fasil':
-        return <DashboardFasil activeTab={activeTab} />;
-      case 'Admin':
-        return <DashboardAdmin activeTab={activeTab} />;
-      default:
-        return <DashboardPenghuni activeTab={activeTab} setActiveTab={setActiveTab} />;
-    }
-  };
+const AppLayout = ({ children }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   return (
     <div className="app-container">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div 
+        className={`mobile-overlay ${isMobileMenuOpen ? 'open' : ''}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      ></div>
+      <Sidebar isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
       <div className="main-content">
-        <Navbar />
+        <Navbar onMenuClick={() => setIsMobileMenuOpen(true)} />
         <main className="content-body">
-          {renderRoleDashboard()}
+          {children}
         </main>
       </div>
     </div>
   );
 };
 
+const DashboardRouter = () => {
+  const { user } = useAuth();
+  const location = useLocation();
+  const path = location.pathname.split('/')[1] || 'dashboard';
+
+  switch (user?.role) {
+    case 'Penghuni':
+      return <DashboardPenghuni activeTab={path} />;
+    case 'Fasil':
+      return <DashboardFasil activeTab={path} />;
+    case 'Admin':
+      return <DashboardAdmin activeTab={path} />;
+    default:
+      return <DashboardPenghuni activeTab={path} />;
+  }
+};
+
+const AppRoutes = () => {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/*" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <DashboardRouter />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+    </Routes>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
-      <MainApp />
+      <Router>
+        <AppRoutes />
+      </Router>
     </AuthProvider>
   );
 }
