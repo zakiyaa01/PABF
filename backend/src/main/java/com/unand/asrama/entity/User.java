@@ -1,5 +1,6 @@
 package com.unand.asrama.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -18,8 +19,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "nim", length = 20, unique = true)
-    private String nim;
+    @Column(name = "nim", length = 30, unique = true)
+    private String nim; // NIM for Penghuni, or NIP/ID for Fasil/Admin
 
     @Column(name = "nama", nullable = false, length = 100)
     private String nama;
@@ -34,6 +35,7 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
+    @JsonIgnore
     @Column(name = "password", nullable = false, length = 255)
     private String password;
 
@@ -44,6 +46,27 @@ public class User {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_kamar", nullable = true)
     private Kamar kamar;
+
+    // Fasil pembina for Penghuni
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "fasil_id", nullable = true)
+    private User fasil;
+
+    // Assigned lorong for Fasil
+    @Column(name = "lorong_binaan", length = 100)
+    private String lorongBinaan;
+
+    // Device binding for Anti-Joki / Single-Device Lock
+    @Column(name = "device_id", length = 100)
+    private String deviceId;
+
+    // Biometric enabled status
+    @Column(name = "biometric_enabled")
+    private Boolean biometricEnabled = false;
+
+    // Soft delete / account active status
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
 
     public User() {
     }
@@ -57,6 +80,7 @@ public class User {
         this.password = password;
         this.role = role;
         this.kamar = kamar;
+        this.isActive = true;
     }
 
     public Integer getId() {
@@ -129,5 +153,45 @@ public class User {
 
     public void setKamar(Kamar kamar) {
         this.kamar = kamar;
+    }
+
+    public User getFasil() {
+        return fasil;
+    }
+
+    public void setFasil(User fasil) {
+        this.fasil = fasil;
+    }
+
+    public String getLorongBinaan() {
+        return lorongBinaan;
+    }
+
+    public void setLorongBinaan(String lorongBinaan) {
+        this.lorongBinaan = lorongBinaan;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public Boolean getBiometricEnabled() {
+        return biometricEnabled;
+    }
+
+    public void setBiometricEnabled(Boolean biometricEnabled) {
+        this.biometricEnabled = biometricEnabled;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }

@@ -4,11 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequest {
 
-    @NotBlank(message = "Email atau NIM wajib diisi")
-    private String identifier; // Email or NIM
+    @NotBlank(message = "Email, NIM, atau NIP wajib diisi")
+    private String identifier; // Email, NIM (Penghuni), or NIP (Fasil/Admin)
 
-    @NotBlank(message = "Password wajib diisi")
     private String password;
+
+    private String deviceId; // Unique Android ID / IMEI for single-device binding
+
+    private Boolean isBiometric = false; // Flag for BiometricPrompt login
 
     public LoginRequest() {
     }
@@ -32,5 +35,21 @@ public class LoginRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public Boolean getIsBiometric() {
+        return isBiometric;
+    }
+
+    public void setIsBiometric(Boolean isBiometric) {
+        this.isBiometric = isBiometric;
     }
 }

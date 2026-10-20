@@ -16,6 +16,9 @@ public class Kamar {
     @Column(name = "lantai", nullable = false)
     private Integer lantai;
 
+    @Column(name = "lorong", length = 50)
+    private String lorong = "Lorong 1";
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_gedung", nullable = false)
     private Gedung gedung;
@@ -26,6 +29,14 @@ public class Kamar {
     public Kamar(String noKamar, Integer lantai, Gedung gedung) {
         this.noKamar = noKamar;
         this.lantai = lantai;
+        this.gedung = gedung;
+        this.lorong = "Lorong 1";
+    }
+
+    public Kamar(String noKamar, Integer lantai, String lorong, Gedung gedung) {
+        this.noKamar = noKamar;
+        this.lantai = lantai;
+        this.lorong = lorong;
         this.gedung = gedung;
     }
 
@@ -51,6 +62,14 @@ public class Kamar {
 
     public void setLantai(Integer lantai) {
         this.lantai = lantai;
+    }
+
+    public String getLorong() {
+        return lorong;
+    }
+
+    public void setLorong(String lorong) {
+        this.lorong = lorong;
     }
 
     public Gedung getGedung() {

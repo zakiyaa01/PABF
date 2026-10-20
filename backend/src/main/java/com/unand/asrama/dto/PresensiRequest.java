@@ -1,19 +1,32 @@
 package com.unand.asrama.dto;
 
-import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public class PresensiRequest {
 
-    @NotNull(message = "User ID wajib diisi")
-    private Integer userId;
-
-    private String jenisPresensi; // "Subuh" atau "Malam"
+    private String nim;
+    private Integer userId; // Optional fallback
+    private String jenisPresensi; // "SUBUH" or "MALAM"
     private BigDecimal latitude;
     private BigDecimal longitude;
+    private Double accuracyMeters;
+    private Boolean isMockLocation = false;
+    private Boolean isEmulator = false;
+    private String wifiBssid;
+    private String deviceDeviceId; // Matches payload key deviceDeviceId / deviceId
+    private String deviceTimestamp;
+    private String photoBase64;
     private String keterangan;
 
     public PresensiRequest() {
+    }
+
+    public String getNim() {
+        return nim;
+    }
+
+    public void setNim(String nim) {
+        this.nim = nim;
     }
 
     public Integer getUserId() {
@@ -46,6 +59,62 @@ public class PresensiRequest {
 
     public void setLongitude(BigDecimal longitude) {
         this.longitude = longitude;
+    }
+
+    public Double getAccuracyMeters() {
+        return accuracyMeters;
+    }
+
+    public void setAccuracyMeters(Double accuracyMeters) {
+        this.accuracyMeters = accuracyMeters;
+    }
+
+    public Boolean getIsMockLocation() {
+        return isMockLocation;
+    }
+
+    public void setIsMockLocation(Boolean isMockLocation) {
+        this.isMockLocation = isMockLocation;
+    }
+
+    public Boolean getIsEmulator() {
+        return isEmulator;
+    }
+
+    public void setIsEmulator(Boolean isEmulator) {
+        this.isEmulator = isEmulator;
+    }
+
+    public String getWifiBssid() {
+        return wifiBssid;
+    }
+
+    public void setWifiBssid(String wifiBssid) {
+        this.wifiBssid = wifiBssid;
+    }
+
+    public String getDeviceDeviceId() {
+        return deviceDeviceId;
+    }
+
+    public void setDeviceDeviceId(String deviceDeviceId) {
+        this.deviceDeviceId = deviceDeviceId;
+    }
+
+    public String getDeviceTimestamp() {
+        return deviceTimestamp;
+    }
+
+    public void setDeviceTimestamp(String deviceTimestamp) {
+        this.deviceTimestamp = deviceTimestamp;
+    }
+
+    public String getPhotoBase64() {
+        return photoBase64;
+    }
+
+    public void setPhotoBase64(String photoBase64) {
+        this.photoBase64 = photoBase64;
     }
 
     public String getKeterangan() {

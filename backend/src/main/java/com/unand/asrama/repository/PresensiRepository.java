@@ -12,6 +12,11 @@ import java.util.Optional;
 public interface PresensiRepository extends JpaRepository<Presensi, Integer> {
     List<Presensi> findByUserIdOrderByWaktuAbsenDesc(Integer userId);
     List<Presensi> findByTanggalOrderByWaktuAbsenDesc(LocalDate tanggal);
+    Optional<Presensi> findByUserIdAndTanggalAndJenisPresensi(Integer userId, LocalDate tanggal, Presensi.JenisPresensi jenisPresensi);
     Optional<Presensi> findByUserIdAndTanggalAndKeteranganContaining(Integer userId, LocalDate tanggal, String jenisPresensi);
-    List<Presensi> findByUserIdAndTanggalBetween(Integer userId, LocalDate startDate, LocalDate endDate);
+    List<Presensi> findByUserIdAndTanggalBetweenOrderByWaktuAbsenDesc(Integer userId, LocalDate startDate, LocalDate endDate);
+    List<Presensi> findByTanggalBetweenOrderByWaktuAbsenDesc(LocalDate startDate, LocalDate endDate);
+    List<Presensi> findByUserFasilIdOrderByWaktuAbsenDesc(Integer fasilId);
+    List<Presensi> findByUserFasilIdAndTanggalOrderByWaktuAbsenDesc(Integer fasilId, LocalDate tanggal);
+    long countByTanggalAndStatus(LocalDate tanggal, Presensi.StatusPresensi status);
 }

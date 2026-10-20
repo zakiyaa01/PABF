@@ -1,100 +1,152 @@
 package com.unand.asrama.config;
 
 import com.unand.asrama.entity.Gedung;
+import com.unand.asrama.entity.Izin;
 import com.unand.asrama.entity.Kamar;
+import com.unand.asrama.entity.Presensi;
 import com.unand.asrama.entity.User;
 import com.unand.asrama.repository.GedungRepository;
+import com.unand.asrama.repository.IzinRepository;
 import com.unand.asrama.repository.KamarRepository;
+import com.unand.asrama.repository.PresensiRepository;
 import com.unand.asrama.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    @Autowired
-    private GedungRepository gedungRepository;
+        @Autowired
+        private GedungRepository gedungRepository;
 
-    @Autowired
-    private KamarRepository kamarRepository;
+        @Autowired
+        private KamarRepository kamarRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+        @Autowired
+        private PresensiRepository presensiRepository;
 
-    @Override
-    public void run(String... args) throws Exception {
-        if (userRepository.count() == 0) {
-            System.out.println("🌱 Seeding initial sample data for Asrama UNAND...");
+        @Autowired
+        private IzinRepository izinRepository;
 
-            // 1. Gedung
-            Gedung gedungA = gedungRepository.save(new Gedung("Gedung Asrama Putra A"));
-            Gedung gedungB = gedungRepository.save(new Gedung("Gedung Asrama Putri B"));
+        @Autowired
+        private PasswordEncoder passwordEncoder;
 
-            // 2. Kamar
-            Kamar kamarA101 = kamarRepository.save(new Kamar("A.101", 1, gedungA));
-            Kamar kamarB201 = kamarRepository.save(new Kamar("B.201", 2, gedungB));
+        @Override
+        public void run(String... args) throws Exception {
+                System.out.println("🌱 Initializing & verifying Enterprise master accounts for Asrama UNAND...");
 
-            // 3. Admin Account
-            User admin = new User(
-                    "ADM001",
-                    "Administrator Asrama",
-                    "Padang",
-                    User.JenisKelamin.L,
-                    "admin@unand.ac.id",
-                    passwordEncoder.encode("admin123"),
-                    User.Role.Admin,
-                    null
-            );
-            userRepository.save(admin);
+                // 1. Ensure Gedungs exist
+                Gedung gedungA = gedungRepository.findAll().stream().findFirst().orElseGet(() -> {
+                        Gedung g = new Gedung(
+                                        "Gedung Asrama Putra A",
+                                        new BigDecimal("-0.914231"),
+                                        new BigDecimal("100.466012"),
+                                        50.0,
+                                        "70:3a:0e:aa:bb:cc");
+                        return gedungRepository.save(g);
+                });
 
-            // 4. Fasil Account
-            User fasil = new User(
-                    "FAS001",
-                    "Fasilitator Utama",
-                    "Padang",
-                    User.JenisKelamin.L,
-                    "fasil@unand.ac.id",
-                    passwordEncoder.encode("fasil123"),
-                    User.Role.Fasil,
-                    null
-            );
-            userRepository.save(fasil);
+                Gedung gedungB = gedungRepository.findAll().stream().skip(1).findFirst().orElseGet(() -> {
+                        Gedung g = new Gedung(
+                                        "Gedung Asrama Putri B",
+                                        new BigDecimal("-0.914800"),
+                                        new BigDecimal("100.466500"),
+                                        50.0,
+                                        "70:3a:0e:aa:bb:dd");
+                        return gedungRepository.save(g);
+                });
 
-            // 5. Penghuni Accounts
-            User penghuni1 = new User(
-                    "2211522001",
-                    "Budi Raharjo",
-                    "Padang",
-                    User.JenisKelamin.L,
-                    "penghuni@unand.ac.id",
-                    passwordEncoder.encode("penghuni123"),
-                    User.Role.Penghuni,
-                    kamarA101
-            );
-            userRepository.save(penghuni1);
+                // 2. Ensure Kamars exist
+                Kamar kamarA101 = kamarRepository.findAll().stream().findFirst().orElseGet(() -> {
+                        return kamarRepository.save(new Kamar("A.101", 1, "Lorong 1", gedungA));
+                });
 
-            User penghuni2 = new User(
-                    "2211522002",
-                    "Siti Aminah",
-                    "Bukittinggi",
-                    User.JenisKelamin.P,
-                    "siti@unand.ac.id",
-                    passwordEncoder.encode("penghuni123"),
-                    User.Role.Penghuni,
-                    kamarB201
-            );
-            userRepository.save(penghuni2);
+                Kamar kamarB201 = kamarRepository.findAll().stream().skip(1).findFirst().orElseGet(() -> {
+                        return kamarRepository.save(new Kamar("B.201", 2, "Lorong Melati", gedungB));
+                });
 
-            System.out.println("✅ Sample data successfully initialized!");
-            System.out.println("🔑 Credentials for Testing:");
-            System.out.println("   - Admin: admin@unand.ac.id / admin123");
-            System.out.println("   - Fasil: fasil@unand.ac.id / fasil123");
-            System.out.println("   - Penghuni: penghuni@unand.ac.id / penghuni123 (NIM: 2211522001)");
+                // 3. Ensure Admin account exists & active
+                User admin = userRepository.findByEmailOrNim("admin@unand.ac.id", "ADM001").orElseGet(() -> {
+                        User u = new User();
+                        u.setNim("ADM001");
+                        u.setEmail("admin@unand.ac.id");
+                        u.setNama("Administrator Asrama UNAND");
+                        u.setRole(User.Role.Admin);
+                        return u;
+                });
+                admin.setPassword(passwordEncoder.encode("admin123"));
+                admin.setIsActive(true);
+                userRepository.save(admin);
+
+                // 4. Ensure Fasil account exists & active
+                User fasil = userRepository.findByEmailOrNim("fasil@unand.ac.id", "FAS001").orElseGet(() -> {
+                        User u = new User();
+                        u.setNim("FAS001");
+                        u.setEmail("fasil@unand.ac.id");
+                        u.setNama("Fasilitator Utama");
+                        u.setRole(User.Role.Fasil);
+                        return u;
+                });
+                fasil.setPassword(passwordEncoder.encode("fasil123"));
+                fasil.setLorongBinaan("Lorong 1");
+                fasil.setIsActive(true);
+                fasil = userRepository.save(fasil);
+
+                // 5. Ensure Farhan (2211521001) exists & active
+                User farhan = userRepository.findByEmailOrNim("farhan@unand.ac.id", "2211521001").orElseGet(() -> {
+                        User u = new User();
+                        u.setNim("2211521001");
+                        u.setEmail("farhan@unand.ac.id");
+                        u.setNama("Muhammad Farhan");
+                        u.setRole(User.Role.Penghuni);
+                        return u;
+                });
+                farhan.setKamar(kamarA101);
+                farhan.setFasil(fasil);
+                farhan.setDeviceId("ANDROID_ID_A1B2C3D4");
+                farhan.setBiometricEnabled(true);
+                farhan.setPassword(passwordEncoder.encode("penghuni123"));
+                farhan.setIsActive(true);
+                userRepository.save(farhan);
+
+                // 6. Ensure Siti Aminah (2211522002) exists & active
+                User siti = userRepository.findByEmailOrNim("siti@unand.ac.id", "2211522002").orElseGet(() -> {
+                        User u = new User();
+                        u.setNim("2211522002");
+                        u.setEmail("siti@unand.ac.id");
+                        u.setNama("Siti Aminah");
+                        u.setRole(User.Role.Penghuni);
+                        return u;
+                });
+                siti.setKamar(kamarB201);
+                siti.setFasil(fasil);
+                siti.setDeviceId("ANDROID_ID_E5F6G7H8");
+                siti.setBiometricEnabled(true);
+                siti.setPassword(passwordEncoder.encode("penghuni123"));
+                siti.setIsActive(true);
+                userRepository.save(siti);
+
+                // Ensure all users in database are marked as active
+                userRepository.findAll().forEach(u -> {
+                        if (u.getIsActive() == null || !u.getIsActive()) {
+                                u.setIsActive(true);
+                                userRepository.save(u);
+                        }
+                });
+
+                System.out.println("✅ SIA-Asrama Enterprise Accounts Successfully Verified & Ready!");
+                System.out.println("   - Penghuni: 2211521001 / penghuni123 (Muhammad Farhan)");
+                System.out.println("   - Fasil:    FAS001 / fasil123 (Fasilitator Utama)");
+                System.out.println("   - Admin:    ADM001 / admin123 (Administrator)");
         }
-    }
 }

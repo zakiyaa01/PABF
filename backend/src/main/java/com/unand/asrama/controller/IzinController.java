@@ -2,6 +2,7 @@ package com.unand.asrama.controller;
 
 import com.unand.asrama.dto.ApiResponse;
 import com.unand.asrama.dto.IzinRequest;
+import com.unand.asrama.dto.KeputusanIzinRequest;
 import com.unand.asrama.entity.Izin;
 import com.unand.asrama.service.IzinService;
 import jakarta.validation.Valid;
@@ -23,7 +24,7 @@ public class IzinController {
     public ResponseEntity<ApiResponse<Izin>> submitIzin(@Valid @RequestBody IzinRequest request) {
         try {
             Izin izin = izinService.submitIzin(request, null);
-            return ResponseEntity.ok(ApiResponse.success("Pengajuan izin berhasil dikirim!", izin));
+            return ResponseEntity.ok(ApiResponse.success("Pengajuan izin berhasil dikirim ke Fasilitator!", izin));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -39,6 +40,19 @@ public class IzinController {
         }
     }
 
+    @GetMapping("/fasil/{fasilId}")
+    public ResponseEntity<ApiResponse<List<Izin>>> getIzinFasil(
+            @PathVariable Integer fasilId,
+            @RequestParam(required = false) Izin.StatusIzin status
+    ) {
+        try {
+            List<Izin> list = izinService.getIzinFasilBinaan(fasilId, status);
+            return ResponseEntity.ok(ApiResponse.success("Daftar izin penghuni binaan berhasil diambil", list));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<Izin>>> getAllIzin() {
         try {
@@ -49,11 +63,18 @@ public class IzinController {
         }
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<ApiResponse<Izin>> updateStatus(@PathVariable Integer id, @RequestParam Izin.StatusIzin status) {
+    @PatchMapping("/{id}/keputusan")
+    public ResponseEntity<ApiResponse<Izin>> reviewIzin(
+            @PathVariable Integer id,
+            @Valid @RequestBody KeputusanIzinRequest request,
+            @RequestParam(required = false) Integer fasilId
+    ) {
         try {
-            Izin updated = izinService.updateStatusIzin(id, status);
-            return ResponseEntity.ok(ApiResponse.success("Status izin berhasil diperbarui!", updated));
+            Izin updated = izinService.reviewIzin(id, request, fasilId);
+            return ResponseEntity.ok(ApiResponse.success(
+                    "Status izin berhasil diperbarui menjadi: " + updated.getStatus(),
+                    updated
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }

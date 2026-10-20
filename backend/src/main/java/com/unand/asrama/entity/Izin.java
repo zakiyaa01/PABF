@@ -12,6 +12,14 @@ public class Izin {
         Menunggu, Disetujui, Ditolak
     }
 
+    public enum KategoriIzin {
+        Sakit,
+        PulangKampung,
+        Dispensasi,
+        DaruratKeluarga,
+        Lainnya
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -26,26 +34,41 @@ public class Izin {
     @Column(name = "tgl_selesai", nullable = false)
     private LocalDate tglSelesai;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "kategori", length = 30)
+    private KategoriIzin kategori = KategoriIzin.Lainnya;
+
     @Column(name = "alasan", nullable = false, columnDefinition = "TEXT")
     private String alasan;
 
-    @Column(name = "file_bukti", length = 255)
+    @Column(name = "file_bukti", length = 500)
     private String fileBukti;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private StatusIzin status = StatusIzin.Menunggu;
 
+    @Column(name = "catatan_fasil", columnDefinition = "TEXT")
+    private String catatanFasil;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "fasil_id", nullable = true)
+    private User fasil;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
 
     public Izin() {
     }
 
-    public Izin(User user, LocalDate tglMulai, LocalDate tglSelesai, String alasan, String fileBukti) {
+    public Izin(User user, LocalDate tglMulai, LocalDate tglSelesai, KategoriIzin kategori, String alasan, String fileBukti) {
         this.user = user;
         this.tglMulai = tglMulai;
         this.tglSelesai = tglSelesai;
+        this.kategori = kategori != null ? kategori : KategoriIzin.Lainnya;
         this.alasan = alasan;
         this.fileBukti = fileBukti;
         this.status = StatusIzin.Menunggu;
@@ -84,6 +107,14 @@ public class Izin {
         this.tglSelesai = tglSelesai;
     }
 
+    public KategoriIzin getKategori() {
+        return kategori;
+    }
+
+    public void setKategori(KategoriIzin kategori) {
+        this.kategori = kategori;
+    }
+
     public String getAlasan() {
         return alasan;
     }
@@ -108,11 +139,35 @@ public class Izin {
         this.status = status;
     }
 
+    public String getCatatanFasil() {
+        return catatanFasil;
+    }
+
+    public void setCatatanFasil(String catatanFasil) {
+        this.catatanFasil = catatanFasil;
+    }
+
+    public User getFasil() {
+        return fasil;
+    }
+
+    public void setFasil(User fasil) {
+        this.fasil = fasil;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
+    }
+
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
     }
 }

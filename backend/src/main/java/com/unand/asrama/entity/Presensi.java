@@ -10,7 +10,11 @@ import java.time.LocalDateTime;
 public class Presensi {
 
     public enum StatusPresensi {
-        Hadir, Izin, Sakit, Alpha
+        Hadir, Terlambat, Izin, Sakit, Alpha
+    }
+
+    public enum JenisPresensi {
+        SUBUH, MALAM
     }
 
     @Id
@@ -27,17 +31,42 @@ public class Presensi {
     @Column(name = "waktu_absen", nullable = false)
     private LocalDateTime waktuAbsen;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "jenis_presensi", length = 20)
+    private JenisPresensi jenisPresensi = JenisPresensi.SUBUH;
+
     @Column(name = "latitude", precision = 10, scale = 8)
     private BigDecimal latitude;
 
     @Column(name = "longitude", precision = 11, scale = 8)
     private BigDecimal longitude;
 
+    @Column(name = "accuracy_meters")
+    private Double accuracyMeters;
+
+    @Column(name = "distance_meters")
+    private Double distanceMeters;
+
+    @Column(name = "is_mock_location")
+    private Boolean isMockLocation = false;
+
+    @Column(name = "is_emulator")
+    private Boolean isEmulator = false;
+
+    @Column(name = "wifi_bssid", length = 50)
+    private String wifiBssid;
+
+    @Column(name = "device_id", length = 100)
+    private String deviceId;
+
+    @Column(name = "device_timestamp", length = 50)
+    private String deviceTimestamp;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private StatusPresensi status;
 
-    @Column(name = "foto_wajah", length = 255)
+    @Column(name = "foto_wajah", length = 500)
     private String fotoWajah;
 
     @Column(name = "keterangan", columnDefinition = "TEXT")
@@ -46,10 +75,11 @@ public class Presensi {
     public Presensi() {
     }
 
-    public Presensi(User user, LocalDate tanggal, LocalDateTime waktuAbsen, StatusPresensi status, String keterangan) {
+    public Presensi(User user, LocalDate tanggal, LocalDateTime waktuAbsen, JenisPresensi jenisPresensi, StatusPresensi status, String keterangan) {
         this.user = user;
         this.tanggal = tanggal;
         this.waktuAbsen = waktuAbsen;
+        this.jenisPresensi = jenisPresensi;
         this.status = status;
         this.keterangan = keterangan;
     }
@@ -86,6 +116,14 @@ public class Presensi {
         this.waktuAbsen = waktuAbsen;
     }
 
+    public JenisPresensi getJenisPresensi() {
+        return jenisPresensi;
+    }
+
+    public void setJenisPresensi(JenisPresensi jenisPresensi) {
+        this.jenisPresensi = jenisPresensi;
+    }
+
     public BigDecimal getLatitude() {
         return latitude;
     }
@@ -100,6 +138,62 @@ public class Presensi {
 
     public void setLongitude(BigDecimal longitude) {
         this.longitude = longitude;
+    }
+
+    public Double getAccuracyMeters() {
+        return accuracyMeters;
+    }
+
+    public void setAccuracyMeters(Double accuracyMeters) {
+        this.accuracyMeters = accuracyMeters;
+    }
+
+    public Double getDistanceMeters() {
+        return distanceMeters;
+    }
+
+    public void setDistanceMeters(Double distanceMeters) {
+        this.distanceMeters = distanceMeters;
+    }
+
+    public Boolean getIsMockLocation() {
+        return isMockLocation;
+    }
+
+    public void setIsMockLocation(Boolean isMockLocation) {
+        this.isMockLocation = isMockLocation;
+    }
+
+    public Boolean getIsEmulator() {
+        return isEmulator;
+    }
+
+    public void setIsEmulator(Boolean isEmulator) {
+        this.isEmulator = isEmulator;
+    }
+
+    public String getWifiBssid() {
+        return wifiBssid;
+    }
+
+    public void setWifiBssid(String wifiBssid) {
+        this.wifiBssid = wifiBssid;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public String getDeviceTimestamp() {
+        return deviceTimestamp;
+    }
+
+    public void setDeviceTimestamp(String deviceTimestamp) {
+        this.deviceTimestamp = deviceTimestamp;
     }
 
     public StatusPresensi getStatus() {
