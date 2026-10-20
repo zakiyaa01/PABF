@@ -39,16 +39,19 @@ const DashboardRouter = () => {
   const location = useLocation();
   const path = location.pathname.split('/')[1] || 'dashboard';
 
-  switch (user?.role) {
-    case 'Penghuni':
-      return <DashboardPenghuni activeTab={path} />;
-    case 'Fasil':
-      return <DashboardFasil activeTab={path} />;
-    case 'Admin':
-      return <DashboardAdmin activeTab={path} />;
-    default:
-      return <DashboardPenghuni activeTab={path} />;
+  if (user?.role === 'Penghuni') {
+    return <DashboardPenghuni activeTab={path} />;
   }
+  if (user?.role === 'Fasil') {
+    return <DashboardFasil activeTab={path} />;
+  }
+  if (user?.role === 'Admin') {
+    if (path === 'verifikasi' || path === 'rekap') {
+      return <DashboardFasil activeTab={path} />;
+    }
+    return <DashboardAdmin activeTab={path} />;
+  }
+  return <DashboardPenghuni activeTab={path} />;
 };
 
 const AppRoutes = () => {

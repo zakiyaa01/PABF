@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { presensiService, izinService } from '../services/api';
 import {
   Sun, Moon, Clock, CheckCircle2, AlertCircle, Camera,
   MapPin, Wifi, ShieldAlert, FileText, Image as ImageIcon,
-  Lock, RefreshCw, X, ChevronRight, Eye
+  Lock, RefreshCw, X, ChevronRight, Eye, CheckSquare, BarChart2,
+  Calendar, Send, PlusCircle, ArrowRight
 } from 'lucide-react';
 
 const DashboardPenghuni = ({ activeTab = 'dashboard' }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [presensiList, setPresensiList] = useState([]);
   const [izinList, setIzinList] = useState([]);
   const [statusHariIni, setStatusHariIni] = useState(null);
@@ -40,6 +43,7 @@ const DashboardPenghuni = ({ activeTab = 'dashboard' }) => {
   const [alasan, setAlasan] = useState('');
   const [fileBuktiBase64, setFileBuktiBase64] = useState(null);
   const [previewBukti, setPreviewBukti] = useState(null);
+  const [selectedBukti, setSelectedBukti] = useState(null);
 
   // Live Server Clock
   const [serverTime, setServerTime] = useState(new Date());
@@ -247,6 +251,15 @@ const DashboardPenghuni = ({ activeTab = 'dashboard' }) => {
   const isSubuhAttended = statusHariIni?.subuh?.sudahPresensi;
   const isMalamAttended = statusHariIni?.malam?.sudahPresensi;
 
+  // Statistics
+  const hadirCount = presensiList.filter((p) => p.status === 'Hadir').length;
+  const terlambatCount = presensiList.filter((p) => p.status === 'Terlambat').length;
+  const alphaCount = presensiList.filter((p) => p.status === 'Alpha').length;
+  const izinCount = izinList.filter((i) => i.status === 'Disetujui').length;
+  const izinPendingCount = izinList.filter((i) => i.status === 'Menunggu').length;
+  const totalPresensiRecorded = presensiList.length;
+  const persentaseHadir = totalPresensiRecorded > 0 ? Math.round((hadirCount / totalPresensiRecorded) * 100) : 100;
+
   return (
     <div>
       {/* Welcome Banner */}
@@ -314,227 +327,632 @@ const DashboardPenghuni = ({ activeTab = 'dashboard' }) => {
         </div>
       )}
 
-      {/* Two Attendance Session Cards */}
-      <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
-        {/* Sesi Subuh */}
-        <div className="card" style={{
-          borderRadius: '16px',
-          border: isSubuhAttended ? '2px solid #10b981' : '1px solid #e2e8f0',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ background: '#fef3c7', padding: '0.75rem', borderRadius: '12px' }}>
-                <Sun size={24} color="#d97706" />
+      {/* ============================================================== */}
+      {/* 1. DASHBOARD OVERVIEW TAB (activeTab === 'dashboard')           */}
+      {/* ============================================================== */}
+      {activeTab === 'dashboard' && (
+        <>
+          {/* 4 Stat Cards */}
+          <div className="grid-4" style={{ marginBottom: '1.5rem' }}>
+            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #059669' }}>
+              <div style={{ backgroundColor: '#ecfdf5', padding: '0.85rem', borderRadius: '12px' }}>
+                <CheckCircle2 size={28} color="#059669" />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Presensi Subuh</h3>
-                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>04.00 – 06.00 WIB (Grace: s/d 06.15)</span>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Kehadiran Sah</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{hadirCount}</div>
+                <div style={{ fontSize: '0.75rem', color: '#059669' }}>Subuh & Malam</div>
               </div>
             </div>
-            {isSubuhAttended ? (
-              <span className="badge-role" style={{ background: '#ecfdf5', color: '#047857', fontWeight: 700 }}>
-                ✓ SUDAH ABSEN
-              </span>
-            ) : (
-              <span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>
-                SIAP ABSEN
-              </span>
-            )}
-          </div>
 
-          <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '10px', fontSize: '0.8rem', color: '#475569', marginBottom: '1.25rem' }}>
-            <div>📍 Lokasi: Radius &lt; 50m dari {user?.namaGedung || 'Gedung Asrama'}</div>
-            <div>📸 AI Liveness CameraX: Wajib Foto Selfie Langsung</div>
-          </div>
-
-          <button
-            onClick={() => openCamera('SUBUH')}
-            disabled={isSubuhAttended}
-            className={`btn ${isSubuhAttended ? 'btn-secondary' : 'btn-primary'}`}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              fontWeight: 700,
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              cursor: isSubuhAttended ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {isSubuhAttended ? (
-              <>
-                <Lock size={16} /> Tombol Terkunci (Subuh Selesai)
-              </>
-            ) : (
-              <>
-                <Camera size={16} /> Ambil Presensi Subuh (Geotagged)
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Sesi Malam */}
-        <div className="card" style={{
-          borderRadius: '16px',
-          border: isMalamAttended ? '2px solid #10b981' : '1px solid #e2e8f0',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ background: '#e0e7ff', padding: '0.75rem', borderRadius: '12px' }}>
-                <Moon size={24} color="#4338ca" />
+            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #2563eb' }}>
+              <div style={{ backgroundColor: '#eff6ff', padding: '0.85rem', borderRadius: '12px' }}>
+                <FileText size={28} color="#2563eb" />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Presensi Malam</h3>
-                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>18.00 – 20.30 WIB (Grace: s/d 20.45)</span>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Izin Disetujui</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{izinCount}</div>
+                <div style={{ fontSize: '0.75rem', color: '#2563eb' }}>Disahkan Pembina</div>
               </div>
             </div>
-            {isMalamAttended ? (
-              <span className="badge-role" style={{ background: '#ecfdf5', color: '#047857', fontWeight: 700 }}>
-                ✓ SUDAH ABSEN
-              </span>
-            ) : (
-              <span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>
-                SIAP ABSEN
-              </span>
-            )}
+
+            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #f59e0b' }}>
+              <div style={{ backgroundColor: '#fef3c7', padding: '0.85rem', borderRadius: '12px' }}>
+                <Clock size={28} color="#d97706" />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Izin Menunggu</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{izinPendingCount}</div>
+                <div style={{ fontSize: '0.75rem', color: '#d97706' }}>Proses Verifikasi</div>
+              </div>
+            </div>
+
+            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #8b5cf6' }}>
+              <div style={{ backgroundColor: '#f3e8ff', padding: '0.85rem', borderRadius: '12px' }}>
+                <BarChart2 size={28} color="#7c3aed" />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Tingkat Kehadiran</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#7c3aed' }}>{persentaseHadir}%</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Disiplin Residen</div>
+              </div>
+            </div>
           </div>
 
-          <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '10px', fontSize: '0.8rem', color: '#475569', marginBottom: '1.25rem' }}>
-            <div>📍 Lokasi: Radius &lt; 50m dari {user?.namaGedung || 'Gedung Asrama'}</div>
-            <div>🔒 Single-Device Lock: Terikat ke Device ID Akun</div>
+          {/* Sesi Hari Ini & Quick Jump */}
+          <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
+            <div className="card" style={{ borderRadius: '16px', border: isSubuhAttended ? '2px solid #10b981' : '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Sun size={20} color="#d97706" />
+                  <strong>Presensi Subuh Hari Ini</strong>
+                </div>
+                {isSubuhAttended ? (
+                  <span className="badge-role" style={{ background: '#ecfdf5', color: '#047857', fontWeight: 700 }}>✓ SUDAH ABSEN</span>
+                ) : (
+                  <span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>SIAP ABSEN</span>
+                )}
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1rem 0' }}>
+                Jadwal: 04.00 – 06.00 WIB • Wajib Foto Selfie Geotagged di Asrama.
+              </p>
+              <button
+                onClick={() => navigate('/presensi')}
+                className="btn btn-secondary"
+                style={{ width: '100%', padding: '0.6rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <span>Buka Presensi Subuh</span> <ArrowRight size={14} />
+              </button>
+            </div>
+
+            <div className="card" style={{ borderRadius: '16px', border: isMalamAttended ? '2px solid #10b981' : '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Moon size={20} color="#4338ca" />
+                  <strong>Presensi Malam Hari Ini</strong>
+                </div>
+                {isMalamAttended ? (
+                  <span className="badge-role" style={{ background: '#ecfdf5', color: '#047857', fontWeight: 700 }}>✓ SUDAH ABSEN</span>
+                ) : (
+                  <span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>SIAP ABSEN</span>
+                )}
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1rem 0' }}>
+                Jadwal: 18.00 – 20.30 WIB • Single-Device Biometric Lock.
+              </p>
+              <button
+                onClick={() => navigate('/presensi')}
+                className="btn btn-secondary"
+                style={{ width: '100%', padding: '0.6rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <span>Buka Presensi Malam</span> <ArrowRight size={14} />
+              </button>
+            </div>
           </div>
 
-          <button
-            onClick={() => openCamera('MALAM')}
-            disabled={isMalamAttended}
-            className={`btn ${isMalamAttended ? 'btn-secondary' : 'btn-primary'}`}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              fontWeight: 700,
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              cursor: isMalamAttended ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {isMalamAttended ? (
-              <>
-                <Lock size={16} /> Tombol Terkunci (Malam Selesai)
-              </>
-            ) : (
-              <>
-                <Camera size={16} /> Ambil Presensi Malam (Geotagged)
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+          {/* Pintasan Aksi & Ringkasan Perizinan */}
+          <div className="card" style={{ marginBottom: '1.5rem', background: '#f8fafc' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>Pintasan Menu Asrama</h3>
+                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
+                  Akses langsung fitur presensi harian dengan kamera AI atau ajukan perizinan online jika berhalangan.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  onClick={() => navigate('/presensi')}
+                  className="btn btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
+                >
+                  <CheckSquare size={16} /> Ke Presensi Harian
+                </button>
+                <button
+                  onClick={() => navigate('/izin')}
+                  className="btn btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
+                >
+                  <FileText size={16} /> Ke Pengajuan Izin
+                </button>
+              </div>
+            </div>
+          </div>
 
-      {/* Quick Actions & Pengajuan Izin */}
-      <div className="card" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>Tidak bisa hadir di asrama?</h3>
-          <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
-            Ajukan izin digital (Sakit, Pulang Kampung, Dispensasi Ormawa, Darurat Keluarga) beserta bukti dokumen.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowIzinModal(true)}
-          className="btn btn-primary"
-          style={{ padding: '0.65rem 1.25rem', borderRadius: '8px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <FileText size={16} /> Ajukan Izin Digital
-        </button>
-      </div>
+          {/* Recent Presensi Overview */}
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Clock size={18} color="#2563eb" /> Riwayat Presensi Terbaru Anda
+              </h3>
+              <button
+                onClick={() => navigate('/presensi')}
+                className="btn btn-secondary"
+                style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                Lihat Semua ({presensiList.length}) <ChevronRight size={14} />
+              </button>
+            </div>
 
-      {/* Riwayat Presensi & Watermarked Photo Preview */}
-      <div className="card">
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Clock size={18} color="#2563eb" /> Riwayat Kehadiran Personal & Watermark Foto
-        </h3>
-
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>Tanggal</th>
-                <th>Waktu Absen</th>
-                <th>Sesi</th>
-                <th>Status</th>
-                <th>Koordinat & Jarak</th>
-                <th>Foto Watermark</th>
-                <th>Keterangan</th>
-              </tr>
-            </thead>
-            <tbody>
-              {presensiList.length === 0 ? (
-                <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem' }}>
-                    Belum ada rekaman riwayat presensi Anda.
-                  </td>
-                </tr>
-              ) : (
-                presensiList.map((p, idx) => (
-                  <tr key={p.id}>
-                    <td>{idx + 1}</td>
-                    <td><strong>{p.tanggal}</strong></td>
-                    <td>{new Date(p.waktuAbsen).toLocaleTimeString('id-ID')} WIB</td>
-                    <td>
-                      <span className="badge-role" style={{ background: '#f1f5f9', color: '#334155' }}>
-                        {p.jenisPresensi}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="badge-role" style={{
-                        backgroundColor: p.status === 'Hadir' ? '#ecfdf5' : p.status === 'Terlambat' ? '#fef3c7' : '#fee2e2',
-                        color: p.status === 'Hadir' ? '#047857' : p.status === 'Terlambat' ? '#b45309' : '#b91c1c'
-                      }}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                      {p.latitude && p.longitude ? (
-                        <>
-                          <div>Lat: {p.latitude}</div>
-                          <div>Long: {p.longitude}</div>
-                          <div style={{ color: '#059669' }}>Jarak: {p.distanceMeters ? Math.round(p.distanceMeters) : 0}m</div>
-                        </>
-                      ) : '-'}
-                    </td>
-                    <td>
-                      {p.fotoWajah ? (
-                        <button
-                          onClick={() => {
-                            const url = p.fotoWajah.startsWith('http') ? p.fotoWajah : `http://localhost:8080${p.fotoWajah.startsWith('/') ? '' : '/'}${p.fotoWajah}`;
-                            setWatermarkedPhotoPreview(url);
-                          }}
-                          className="btn btn-secondary"
-                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <Eye size={12} /> Lihat Foto
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>-</span>
-                      )}
-                    </td>
-                    <td style={{ fontSize: '0.8rem' }}>{p.keterangan || '-'}</td>
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Tanggal</th>
+                    <th>Waktu Absen</th>
+                    <th>Sesi</th>
+                    <th>Status</th>
+                    <th>Foto Watermark</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody>
+                  {presensiList.slice(0, 5).map((p, idx) => (
+                    <tr key={p.id}>
+                      <td>{idx + 1}</td>
+                      <td><strong>{p.tanggal}</strong></td>
+                      <td>{new Date(p.waktuAbsen).toLocaleTimeString('id-ID')} WIB</td>
+                      <td>
+                        <span className="badge-role" style={{ background: '#f1f5f9', color: '#334155' }}>{p.jenisPresensi}</span>
+                      </td>
+                      <td>
+                        <span className="badge-role" style={{
+                          backgroundColor: p.status === 'Hadir' ? '#ecfdf5' : '#fee2e2',
+                          color: p.status === 'Hadir' ? '#047857' : '#b91c1c'
+                        }}>
+                          {p.status}
+                        </span>
+                      </td>
+                      <td>
+                        {p.fotoWajah ? (
+                          <button
+                            onClick={() => {
+                              const url = p.fotoWajah.startsWith('http') ? p.fotoWajah : `http://localhost:8080${p.fotoWajah.startsWith('/') ? '' : '/'}${p.fotoWajah}`;
+                              setWatermarkedPhotoPreview(url);
+                            }}
+                            className="btn btn-secondary"
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <Eye size={12} /> Lihat Foto
+                          </button>
+                        ) : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                  {presensiList.length === 0 && (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: 'center', color: '#94a3b8', padding: '1.5rem' }}>
+                        Belum ada riwayat presensi.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ============================================================== */}
+      {/* 2. PRESENSI HARIAN TAB (activeTab === 'presensi')               */}
+      {/* ============================================================== */}
+      {(activeTab === 'presensi' || (activeTab !== 'dashboard' && activeTab !== 'izin')) && (
+        <>
+          {/* Two Attendance Session Cards */}
+          <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
+            {/* Sesi Subuh */}
+            <div className="card" style={{
+              borderRadius: '16px',
+              border: isSubuhAttended ? '2px solid #10b981' : '1px solid #e2e8f0',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ background: '#fef3c7', padding: '0.75rem', borderRadius: '12px' }}>
+                    <Sun size={24} color="#d97706" />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Presensi Subuh</h3>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>04.00 – 06.00 WIB (Grace: s/d 06.15)</span>
+                  </div>
+                </div>
+                {isSubuhAttended ? (
+                  <span className="badge-role" style={{ background: '#ecfdf5', color: '#047857', fontWeight: 700 }}>
+                    ✓ SUDAH ABSEN
+                  </span>
+                ) : (
+                  <span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>
+                    SIAP ABSEN
+                  </span>
+                )}
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '10px', fontSize: '0.8rem', color: '#475569', marginBottom: '1.25rem' }}>
+                <div>📍 Lokasi: Radius &lt; 50m dari {user?.namaGedung || 'Gedung Asrama'}</div>
+                <div>📸 AI Liveness CameraX: Wajib Foto Selfie Langsung</div>
+              </div>
+
+              <button
+                onClick={() => openCamera('SUBUH')}
+                disabled={isSubuhAttended}
+                className={`btn ${isSubuhAttended ? 'btn-secondary' : 'btn-primary'}`}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  fontWeight: 700,
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  cursor: isSubuhAttended ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isSubuhAttended ? (
+                  <>
+                    <Lock size={16} /> Tombol Terkunci (Subuh Selesai)
+                  </>
+                ) : (
+                  <>
+                    <Camera size={16} /> Ambil Presensi Subuh (Geotagged)
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Sesi Malam */}
+            <div className="card" style={{
+              borderRadius: '16px',
+              border: isMalamAttended ? '2px solid #10b981' : '1px solid #e2e8f0',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ background: '#e0e7ff', padding: '0.75rem', borderRadius: '12px' }}>
+                    <Moon size={24} color="#4338ca" />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Presensi Malam</h3>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>18.00 – 20.30 WIB (Grace: s/d 20.45)</span>
+                  </div>
+                </div>
+                {isMalamAttended ? (
+                  <span className="badge-role" style={{ background: '#ecfdf5', color: '#047857', fontWeight: 700 }}>
+                    ✓ SUDAH ABSEN
+                  </span>
+                ) : (
+                  <span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>
+                    SIAP ABSEN
+                  </span>
+                )}
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '10px', fontSize: '0.8rem', color: '#475569', marginBottom: '1.25rem' }}>
+                <div>📍 Lokasi: Radius &lt; 50m dari {user?.namaGedung || 'Gedung Asrama'}</div>
+                <div>🔒 Single-Device Lock: Terikat ke Device ID Akun</div>
+              </div>
+
+              <button
+                onClick={() => openCamera('MALAM')}
+                disabled={isMalamAttended}
+                className={`btn ${isMalamAttended ? 'btn-secondary' : 'btn-primary'}`}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  fontWeight: 700,
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  cursor: isMalamAttended ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isMalamAttended ? (
+                  <>
+                    <Lock size={16} /> Tombol Terkunci (Malam Selesai)
+                  </>
+                ) : (
+                  <>
+                    <Camera size={16} /> Ambil Presensi Malam (Geotagged)
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Actions & Pengajuan Izin */}
+          <div className="card" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>Tidak bisa hadir di asrama?</h3>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
+                Ajukan izin digital (Sakit, Pulang Kampung, Dispensasi Ormawa, Darurat Keluarga) beserta bukti dokumen.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/izin')}
+              className="btn btn-primary"
+              style={{ padding: '0.65rem 1.25rem', borderRadius: '8px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <FileText size={16} /> Ajukan Izin Digital
+            </button>
+          </div>
+
+          {/* Riwayat Presensi & Watermarked Photo Preview */}
+          <div className="card">
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Clock size={18} color="#2563eb" /> Riwayat Kehadiran Personal & Watermark Foto
+            </h3>
+
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Tanggal</th>
+                    <th>Waktu Absen</th>
+                    <th>Sesi</th>
+                    <th>Status</th>
+                    <th>Koordinat & Jarak</th>
+                    <th>Foto Watermark</th>
+                    <th>Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {presensiList.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem' }}>
+                        Belum ada rekaman riwayat presensi Anda.
+                      </td>
+                    </tr>
+                  ) : (
+                    presensiList.map((p, idx) => (
+                      <tr key={p.id}>
+                        <td>{idx + 1}</td>
+                        <td><strong>{p.tanggal}</strong></td>
+                        <td>{new Date(p.waktuAbsen).toLocaleTimeString('id-ID')} WIB</td>
+                        <td>
+                          <span className="badge-role" style={{ background: '#f1f5f9', color: '#334155' }}>
+                            {p.jenisPresensi}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="badge-role" style={{
+                            backgroundColor: p.status === 'Hadir' ? '#ecfdf5' : p.status === 'Terlambat' ? '#fef3c7' : '#fee2e2',
+                            color: p.status === 'Hadir' ? '#047857' : p.status === 'Terlambat' ? '#b45309' : '#b91c1c'
+                          }}>
+                            {p.status}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                          {p.latitude && p.longitude ? (
+                            <>
+                              <div>Lat: {p.latitude}</div>
+                              <div>Long: {p.longitude}</div>
+                              <div style={{ color: '#059669' }}>Jarak: {p.distanceMeters ? Math.round(p.distanceMeters) : 0}m</div>
+                            </>
+                          ) : '-'}
+                        </td>
+                        <td>
+                          {p.fotoWajah ? (
+                            <button
+                              onClick={() => {
+                                const url = p.fotoWajah.startsWith('http') ? p.fotoWajah : `http://localhost:8080${p.fotoWajah.startsWith('/') ? '' : '/'}${p.fotoWajah}`;
+                                setWatermarkedPhotoPreview(url);
+                              }}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <Eye size={12} /> Lihat Foto
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>-</span>
+                          )}
+                        </td>
+                        <td style={{ fontSize: '0.8rem' }}>{p.keterangan || '-'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ============================================================== */}
+      {/* 3. PENGAJUAN IZIN TAB (activeTab === 'izin')                    */}
+      {/* ============================================================== */}
+      {activeTab === 'izin' && (
+        <>
+          {/* Form Pengajuan Izin Baru Card */}
+          <div className="card" style={{ marginBottom: '1.5rem', borderRadius: '16px' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FileText size={20} color="#047857" /> Formulir Pengajuan Izin Digital
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.25rem' }}>
+              Isi formulir perizinan di bawah ini dengan lengkap. Pengajuan akan segera ditinjau dan diverifikasi oleh Fasilitator Pembina Anda.
+            </p>
+
+            <form onSubmit={handleIzinSubmit}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                    Kategori Izin
+                  </label>
+                  <select
+                    value={kategori}
+                    onChange={(e) => setKategori(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  >
+                    <option value="Sakit">Sakit (Melampirkan Surat Dokter)</option>
+                    <option value="PulangKampung">Pulang Kampung / Libur</option>
+                    <option value="Dispensasi">Dispensasi Ormawa / Kampus</option>
+                    <option value="DaruratKeluarga">Darurat Keluarga</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                    Tanggal Mulai
+                  </label>
+                  <input
+                    type="date"
+                    value={tglMulai}
+                    onChange={(e) => setTglMulai(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                    Tanggal Selesai
+                  </label>
+                  <input
+                    type="date"
+                    value={tglSelesai}
+                    onChange={(e) => setTglSelesai(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                  Narasi Alasan Lengkap
+                </label>
+                <textarea
+                  rows="3"
+                  value={alasan}
+                  onChange={(e) => setAlasan(e.target.value)}
+                  placeholder="Jelaskan keperluan dan detail pengajuan izin Anda..."
+                  required
+                  style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid #cbd5e1', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                  Unggah Bukti Dokumen (Foto Surat Sakit / Surat Dispensasi)
+                </label>
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  onChange={handleProofImageChange}
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                />
+                {previewBukti && (
+                  <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <img
+                      src={previewBukti}
+                      alt="Preview Bukti"
+                      style={{ maxHeight: '100px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    />
+                    <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>
+                      ✓ Bukti dokumen terunggah & siap dikirim
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary"
+                style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', fontWeight: 700, background: '#047857', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <Send size={16} /> {loading ? 'Mengirim Pengajuan...' : 'Kirim Pengajuan Izin ke Fasilitator'}
+              </button>
+            </form>
+          </div>
+
+          {/* Tabel Riwayat Pengajuan Izin */}
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Clock size={18} color="#047857" /> Riwayat Pengajuan Izin Digital Anda
+              </h3>
+              <button
+                onClick={fetchData}
+                className="btn btn-secondary"
+                style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <RefreshCw size={14} /> Refresh
+              </button>
+            </div>
+
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Tanggal Diajukan</th>
+                    <th>Periode Izin</th>
+                    <th>Kategori</th>
+                    <th>Alasan</th>
+                    <th>Bukti Dokumen</th>
+                    <th>Status</th>
+                    <th>Catatan Fasilitator</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {izinList.map((item, idx) => (
+                    <tr key={item.id}>
+                      <td>{idx + 1}</td>
+                      <td>{item.createdAt ? new Date(item.createdAt).toLocaleDateString('id-ID') : '-'}</td>
+                      <td>
+                        <strong>{item.tglMulai}</strong> s/d <strong>{item.tglSelesai}</strong>
+                      </td>
+                      <td>
+                        <span className="badge-role" style={{ background: '#f1f5f9', color: '#1e293b' }}>
+                          {item.kategori || 'Sakit'}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: '0.85rem' }}>{item.alasan}</td>
+                      <td>
+                        {item.fileBukti ? (
+                          <button
+                            onClick={() => {
+                              const url = item.fileBukti.startsWith('http') ? item.fileBukti : `http://localhost:8080${item.fileBukti.startsWith('/') ? '' : '/'}${item.fileBukti}`;
+                              setSelectedBukti(url);
+                            }}
+                            className="btn btn-secondary"
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <Eye size={12} /> Lihat Bukti
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Tidak ada</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className="badge-role" style={{
+                          backgroundColor: item.status === 'Disetujui' ? '#ecfdf5' : item.status === 'Ditolak' ? '#fee2e2' : '#fef3c7',
+                          color: item.status === 'Disetujui' ? '#047857' : item.status === 'Ditolak' ? '#b91c1c' : '#b45309'
+                        }}>
+                          {item.status === 'Menunggu' ? 'Menunggu Verifikasi' : item.status}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: '0.8rem', color: '#475569' }}>
+                        {item.catatanFasil || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                  {izinList.length === 0 && (
+                    <tr>
+                      <td colSpan="8" style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem' }}>
+                        Belum ada riwayat perizinan yang Anda ajukan.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* --- CAMERA & GEOFENCING MODAL --- */}
       {showCameraModal && (
@@ -904,6 +1322,53 @@ const DashboardPenghuni = ({ activeTab = 'dashboard' }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Bukti Izin Modal */}
+      {selectedBukti && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          zIndex: 1100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }}>
+          <div style={{ position: 'relative', maxWidth: '700px', width: '100%', textAlign: 'center' }}>
+            <button
+              onClick={() => setSelectedBukti(null)}
+              style={{
+                position: 'absolute',
+                top: '-40px',
+                right: '0px',
+                background: '#fff',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={18} />
+            </button>
+            <img
+              src={selectedBukti}
+              alt="Lampiran Bukti Dokumen"
+              style={{ width: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: '12px', border: '2px solid #fff' }}
+            />
+            <div style={{ color: '#fff', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+              Lampiran Bukti Surat / Dokumen Perizinan
+            </div>
           </div>
         </div>
       )}

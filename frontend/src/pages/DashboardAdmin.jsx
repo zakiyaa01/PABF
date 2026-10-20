@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminService, presensiService } from '../services/api';
 import {
   Shield, Building, Users, CheckSquare, Plus, Edit2, Key,
   Trash2, Upload, Download, FileSpreadsheet, MapPin, CheckCircle2,
-  XCircle, Search, UserCheck, X, RefreshCw, BarChart2
+  XCircle, Search, UserCheck, X, RefreshCw, BarChart2,
+  ArrowRight, ChevronRight, Clock, FileText, Smartphone, Lock, Server
 } from 'lucide-react';
 
 const DashboardAdmin = ({ activeTab = 'dashboard' }) => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [gedungList, setGedungList] = useState([]);
@@ -187,6 +190,8 @@ const DashboardAdmin = ({ activeTab = 'dashboard' }) => {
     return matchesSearch && matchesRole;
   });
 
+  const currentTab = (activeTab === 'users' || activeTab === 'gedung') ? activeTab : 'dashboard';
+
   return (
     <div>
       {/* Admin Header */}
@@ -203,37 +208,72 @@ const DashboardAdmin = ({ activeTab = 'dashboard' }) => {
               ADMINISTRATOR ASRAMA PUSAT
             </span>
             <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: '0.5rem 0 0.25rem' }}>
-              SIA-Asrama Master Data & Analytics
+              {currentTab === 'users' ? 'Manajemen Pengguna & Device Binding' :
+               currentTab === 'gedung' ? 'Pemetaan Gedung, Kamar & Geofence' :
+               'SIA-Asrama Master Data & Executive Analytics'}
             </h1>
             <p style={{ fontSize: '0.85rem', color: '#a7f3d0', margin: 0 }}>
-              Manajemen Terpadu Gedung, Kamar, Akun Mahasiswa, Fasilitator, dan Laporan Eksekutif Universitas.
+              {currentTab === 'users' ? 'Kelola akun penghuni, fasilitator, admin, reset kata sandi, dan reset binding hardware device ID.' :
+               currentTab === 'gedung' ? 'Konfigurasi titik koordinat geofencing, radius meter, Wi-Fi BSSID asrama, dan penugasan fasilitator lorong.' :
+               'Manajemen Terpadu Gedung, Kamar, Akun Mahasiswa, Fasilitator, dan Laporan Eksekutif Universitas.'}
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <a
-              href={adminService.exportPenghuniExcelUrl()}
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-secondary"
-              style={{ background: '#fff', color: '#065f46', border: 'none', fontWeight: 700, padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
-            >
-              <Download size={16} /> Ekspor Data (.xlsx)
-            </a>
-            <button
-              onClick={() => setShowImportModal(true)}
-              className="btn btn-secondary"
-              style={{ background: '#f59e0b', color: '#000', border: 'none', fontWeight: 700, padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Upload size={16} /> Impor Massal Excel
-            </button>
-            <button
-              onClick={handleOpenAddUser}
-              className="btn btn-primary"
-              style={{ background: '#0f172a', border: 'none', padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Plus size={16} /> Tambah Akun
-            </button>
+            {currentTab === 'users' && (
+              <>
+                <a
+                  href={adminService.exportPenghuniExcelUrl()}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary"
+                  style={{ background: '#fff', color: '#065f46', border: 'none', fontWeight: 700, padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                >
+                  <Download size={16} /> Ekspor Data (.xlsx)
+                </a>
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="btn btn-secondary"
+                  style={{ background: '#f59e0b', color: '#000', border: 'none', fontWeight: 700, padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Upload size={16} /> Impor Massal Excel
+                </button>
+                <button
+                  onClick={handleOpenAddUser}
+                  className="btn btn-primary"
+                  style={{ background: '#0f172a', border: 'none', padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Plus size={16} /> Tambah Akun
+                </button>
+              </>
+            )}
+            {currentTab === 'gedung' && (
+              <button
+                onClick={() => setShowAssignFasilModal(true)}
+                className="btn btn-secondary"
+                style={{ background: '#fbbf24', color: '#0f172a', border: 'none', fontWeight: 700, padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <UserCheck size={16} /> Alokasikan Fasil ke Lorong
+              </button>
+            )}
+            {currentTab === 'dashboard' && (
+              <>
+                <button
+                  onClick={() => navigate('/users')}
+                  className="btn btn-secondary"
+                  style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Users size={16} /> Manajemen User
+                </button>
+                <button
+                  onClick={() => navigate('/gedung')}
+                  className="btn btn-secondary"
+                  style={{ background: '#fbbf24', color: '#0f172a', border: 'none', fontWeight: 700, padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Building size={16} /> Struktur Gedung
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -244,46 +284,128 @@ const DashboardAdmin = ({ activeTab = 'dashboard' }) => {
         </div>
       )}
 
-      {/* System-Wide Analytics Widgets */}
-      <div className="grid-3" style={{ marginBottom: '1.5rem' }}>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #2563eb' }}>
-          <div style={{ backgroundColor: '#eff6ff', padding: '0.85rem', borderRadius: '12px' }}>
-            <Users size={28} color="#2563eb" />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Total Penghuni Terdaftar</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{analytics?.totalPenghuni || users.filter((u) => u.role === 'Penghuni').length}</div>
-            <div style={{ fontSize: '0.75rem', color: '#2563eb' }}>{users.filter((u) => u.role === 'Fasil').length} Fasilitator Pembina</div>
-          </div>
-        </div>
-
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #059669' }}>
-          <div style={{ backgroundColor: '#ecfdf5', padding: '0.85rem', borderRadius: '12px' }}>
-            <BarChart2 size={28} color="#059669" />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Persentase Kehadiran Hari Ini</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#059669' }}>
-              {analytics?.attendancePercentageToday || 85}%
+      {/* ============================================================== */}
+      {/* 1. EXECUTIVE DASHBOARD OVERVIEW (currentTab === 'dashboard')    */}
+      {/* ============================================================== */}
+      {currentTab === 'dashboard' && (
+        <>
+          {/* System-Wide Analytics Widgets */}
+          <div className="grid-3" style={{ marginBottom: '1.5rem' }}>
+            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #2563eb' }}>
+              <div style={{ backgroundColor: '#eff6ff', padding: '0.85rem', borderRadius: '12px' }}>
+                <Users size={28} color="#2563eb" />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Total Penghuni Terdaftar</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{analytics?.totalPenghuni || users.filter((u) => u.role === 'Penghuni').length}</div>
+                <div style={{ fontSize: '0.75rem', color: '#2563eb' }}>{users.filter((u) => u.role === 'Fasil').length} Fasilitator Pembina</div>
+              </div>
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Hadir: {analytics?.hadirToday || 2} | Izin: {analytics?.izinToday || 1}</div>
-          </div>
-        </div>
 
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #d97706' }}>
-          <div style={{ backgroundColor: '#fef3c7', padding: '0.85rem', borderRadius: '12px' }}>
-            <Building size={28} color="#d97706" />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Kapasitas Asrama UNAND</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{gedungList.length || 2} Gedung</div>
-            <div style={{ fontSize: '0.75rem', color: '#d97706' }}>{kamarList.length || 2} Kamar Aktif Terpetakan</div>
-          </div>
-        </div>
-      </div>
+            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #059669' }}>
+              <div style={{ backgroundColor: '#ecfdf5', padding: '0.85rem', borderRadius: '12px' }}>
+                <BarChart2 size={28} color="#059669" />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Persentase Kehadiran Hari Ini</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#059669' }}>
+                  {analytics?.attendancePercentageToday || 85}%
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Hadir: {analytics?.hadirToday || 2} | Izin: {analytics?.izinToday || 1}</div>
+              </div>
+            </div>
 
-      {/* Dynamic Mapping & Dormitory Allocation View */}
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
+            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #d97706' }}>
+              <div style={{ backgroundColor: '#fef3c7', padding: '0.85rem', borderRadius: '12px' }}>
+                <Building size={28} color="#d97706" />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Kapasitas Asrama UNAND</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{gedungList.length || 2} Gedung</div>
+                <div style={{ fontSize: '0.75rem', color: '#d97706' }}>{kamarList.length || 2} Kamar Aktif Terpetakan</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Access Shortcut Cards */}
+          <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
+            <div className="card" style={{ borderRadius: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Users size={20} color="#2563eb" />
+                  <strong>Master Data Pengguna & Device Binding</strong>
+                </div>
+                <span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>
+                  {users.length} Akun
+                </span>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1rem 0' }}>
+                Manajemen akun Santri & Fasil, reset password, enkripsi credential, dan reset device hardware UUID.
+              </p>
+              <button
+                onClick={() => navigate('/users')}
+                className="btn btn-secondary"
+                style={{ width: '100%', padding: '0.6rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <span>Buka Manajemen Pengguna</span> <ArrowRight size={14} />
+              </button>
+            </div>
+
+            <div className="card" style={{ borderRadius: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Building size={20} color="#059669" />
+                  <strong>Pemetaan Gedung, Kamar & Geofencing</strong>
+                </div>
+                <span className="badge-role" style={{ background: '#ecfdf5', color: '#047857', fontWeight: 700 }}>
+                  {gedungList.length} Gedung
+                </span>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1rem 0' }}>
+                Pengaturan koordinat GPS Haversine, radius meter, Wi-Fi BSSID validasi, serta penugasan fasil ke lorong.
+              </p>
+              <button
+                onClick={() => navigate('/gedung')}
+                className="btn btn-secondary"
+                style={{ width: '100%', padding: '0.6rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <span>Kelola Struktur Asrama</span> <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* System Security & Architecture Overview */}
+          <div className="card" style={{ marginBottom: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Shield size={16} color="#047857" /> Arsitektur Keamanan Enterprise & Status Proteksi
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', fontSize: '0.8rem' }}>
+              <div style={{ background: '#fff', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                <div style={{ fontWeight: 600, color: '#334155', marginBottom: '2px' }}>🔒 Single-Device Lock</div>
+                <div style={{ color: '#059669', fontSize: '0.75rem' }}>Aktif (Device ID Terikat)</div>
+              </div>
+              <div style={{ background: '#fff', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                <div style={{ fontWeight: 600, color: '#334155', marginBottom: '2px' }}>📍 Geofence Enforcement</div>
+                <div style={{ color: '#059669', fontSize: '0.75rem' }}>Radius Validasi Haversine</div>
+              </div>
+              <div style={{ background: '#fff', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                <div style={{ fontWeight: 600, color: '#334155', marginBottom: '2px' }}>📸 Anti Fake & Mock GPS</div>
+                <div style={{ color: '#059669', fontSize: '0.75rem' }}>Live Geotag Watermark</div>
+              </div>
+              <div style={{ background: '#fff', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                <div style={{ fontWeight: 600, color: '#334155', marginBottom: '2px' }}>🛡️ RBAC & Spring Security</div>
+                <div style={{ color: '#059669', fontSize: '0.75rem' }}>JWT Bearer Protection</div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ============================================================== */}
+      {/* 2. GEDUNG & KAMAR TAB (currentTab === 'gedung')                 */}
+      {/* ============================================================== */}
+      {currentTab === 'gedung' && (
+        <div className="card" style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Building size={18} color="#059669" /> Pemetaan Struktur Asrama & Alokasi Fasil (Gedung ➔ Lantai ➔ Lorong ➔ Kamar)
@@ -322,9 +444,13 @@ const DashboardAdmin = ({ activeTab = 'dashboard' }) => {
           ))}
         </div>
       </div>
+      )}
 
-      {/* Complete Master CRUD Users Table */}
-      <div className="card">
+      {/* ============================================================== */}
+      {/* 3. MANAJEMEN USER TAB (currentTab === 'users')                  */}
+      {/* ============================================================== */}
+      {currentTab === 'users' && (
+        <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>
             Master Data Pengguna (Penghuni & Fasil)
@@ -450,6 +576,7 @@ const DashboardAdmin = ({ activeTab = 'dashboard' }) => {
           </table>
         </div>
       </div>
+      )}
 
       {/* --- ADD / EDIT USER MODAL --- */}
       {showUserModal && (
